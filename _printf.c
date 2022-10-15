@@ -1,44 +1,50 @@
 #include "main.h"
 
 /**
- * _printf - printf function
- * @format: const char pointer
- * Return: b_len
+ *_printf - prints an specified format
+ *@format: format to print
+ *Return: length of the print
  */
 int _printf(const char *format, ...)
 {
-	int (*pfunc)(va_list, flags_t *);
-	const char *p;
-	va_list arguments;
-	flags_t flags = {0, 0, 0};
+	function_t identity_f[] = {{'c', _printf_c}, {'s', _printf_s},
+		{'i', print_number}, {'d', print_number}, {'b', _print_b},
+		{'o', _print_o}, {'u', _print_u}, {'x', _print_x},
+		{'X', _print_X}, {'\0', NULL}};
+	va_list flist;
+	unsigned int len_printf = 0, i = 0, k = 0, flag = 0;
+	char j = '\0';
 
-	register int count = 0;
-
-	va_start(arguments, format);
-	if (!format || (format[0] == '%' && !format[1]))
+	if (format == NULL || (format[i] == '%' && format[1] == '\0'))
 		return (-1);
-	if (format[0] == '%' && format[1] == ' ' && !format[2])
-		return (-1);
-	for (p = format; *p; p++)
+	va_start(flist, format);
+	while (format[i])
 	{
-		if (*p == '%')
+		for (; format[i] != '%' && format[i] != '\0'; i++)
 		{
-			p++;
-			if (*p == '%')
+			j = format[i];
+			len_printf += _putchar(j);
+		}
+		flag = i + 1;
+		if (format[flag] == '%' && format[i])
+			_putchar('%'), len_printf++, i += 2;
+		else if (format[flag] == '\0')
+			i++;
+		else
+		{
+			for (k = 0; identity_f[k].id && format[i]; k++)
 			{
-				count += _putchar('%');
-				continue;
+				if (identity_f[k].id == format[flag])
+				{
+					len_printf += identity_f[k].f(flist);
+					i += 2;
+					break;
+				}
 			}
-			while (get_flag(*p, &flags))
-				p++;
-			pfunc = get_print(*p);
-			count += (pfunc)
-				? pfunc(arguments, &flags)
-				: _printf("%%%c", *p);
-		} else
-			count += _putchar(*p);
+		}
+		if (identity_f[k].id == '\0' && format[i])
+			_putchar(format[i++]), len_printf++;
 	}
-	_putchar(-1);
-	va_end(arguments);
-	return (count);
+	va_end(flist);
+	return (len_printf);
 }
